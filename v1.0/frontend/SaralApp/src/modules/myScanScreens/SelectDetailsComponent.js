@@ -20,6 +20,7 @@ import { GetAbsentStudentData } from '../../flux/actions/apis/getAbsentStudentDa
 import { LoginAction } from '../../flux/actions/apis/LoginAction';
 import { LogoutAction } from '../../flux/actions/apis/LogoutAction';
 
+
 //components
 import ShareComponent from '../common/components/Share';
 import MultibrandLabels from '../common/components/multibrandlabels';
@@ -28,9 +29,9 @@ import CustomPopup from '../common/components/CustomPopup';
 import { getRegularStudentExamApi, setRegularStudentExamApi } from '../../utils/offlineStorageUtils';
 import constants from '../../flux/actions/constants';
 import { storeFactory } from '../../flux/store/store';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 //redux
-
 const clearState = {
     defaultSelected: Strings.select_text,
     classesArr: [],
@@ -71,12 +72,19 @@ const clearState = {
     isCalledStudentAndExam: false,
     set:[],
     ExamSetArray:[],
-    disabled:false
+    disabled: false,
+    classopen: false,
+    classvalue: null,
+    sectionopen: false,
+    sectionvalue: null
 }
+
+DropDownPicker.setListMode("SCROLLVIEW");
 
 class SelectDetailsComponent extends Component {
     constructor(props) {
         super(props);
+
 
         this.state = {
             isLoading: false,
@@ -122,17 +130,67 @@ class SelectDetailsComponent extends Component {
             isCalledStudentAndExam: false,
             set:[],
             ExamSetArray:[],
-            disabled:false
+            disabled: false,
+            classopen: false,
+            classvalue: null,
+            sectionopen: false,
+            sectionvalue: null
         }
+
         this.onPress = this.onPress.bind(this);
-        this.onBack = this.onBack.bind(this)
+        this.setClassOpen = this.setClassOpen.bind(this);
+        this.setClassValue = this.setClassValue.bind(this);
+        this.setClassItems = this.setClassItems.bind(this);
+
+        this.setSectionOpen = this.setSectionOpen.bind(this);
+        this.setSectionValue = this.setSectionValue.bind(this);
+        this.setSectionItems = this.setSectionItems.bind(this);
+        this.onBack = this.onBack.bind(this);
+
     }
 
     onPress() {
         this.setState({ isHidden: !this.state.isHidden })
     }
 
+    setClassOpen(classopen) {
+        this.setState({
+        classopen
+        });
+    }
+
+    setClassValue(callback) {
+        this.setState(state => ({
+        classvalue: callback(state.classvalue)
+        }));
+    }
+
+    setClassItems(callback) {
+        this.setState(state => ({
+        classList: callback(state.classList)
+        }));
+    }
+
+    setSectionOpen(sectionopen) {
+        this.setState({
+        sectionopen
+        });
+    }
+
+    setSectionValue(callback) {
+        this.setState(state => ({
+        sectionvalue: callback(state.sectionvalue)
+        }));
+    }
+
+    setSectionItems(callback) {
+        this.setState(state => ({
+        sectionList: callback(state.sectionList)
+        }));
+    }
+
     componentDidMount() {
+        DropDownPicker.setListMode("SCROLLVIEW");
         const { navigation, scanTypeData } = this.props
         navigation.addListener('willFocus', async payload => {
             BackHandler.addEventListener('hardwareBackPress', this.onBack)
@@ -152,13 +210,14 @@ class SelectDetailsComponent extends Component {
                 _.forEach(classesArr, (data, index) => {
                     classes.push(data.className)
                 })
-               
+
                 classesArr.sort((a, b) => {
                     return a.classId - b.classId;
                 });
                 let sortclassdata = []
-                classesArr.forEach((e) => {
-                sortclassdata.push(`${e.className}`)
+                classesArr.forEach((e,index) => {
+                 //sortclassdata.push(`${e.className}`)
+                   sortclassdata.push({ label: e.classId, value: e.classId, key: index});
                 });
                 this.setState({
                     classList: sortclassdata,
@@ -188,7 +247,8 @@ class SelectDetailsComponent extends Component {
             if (value != selectedClass) {
                 const sections = [...classesArr[index].sections]
                 let sectionListArr = []
-                _.forEach(sections, (sectionData) => sectionListArr.push(sectionData.section))
+                //_.forEach(sections, (sectionData) => sectionListArr.push(sectionData.section))
+                _.forEach(sections, (sectionData,index) => sectionListArr.push({ label: sectionData.section, value: sectionData.section, key: index}))
                 this.setState({
                     sectionList: sectionListArr,
                     sectionListIndex: 0,
@@ -201,7 +261,7 @@ class SelectDetailsComponent extends Component {
                     if (loginDetails) {
                         let payload = {
                             classId: classesArr[index].classId,
-                            section: sectionListArr[0],
+                            section: sectionListArr[0].value,
                         }
 
                         this.loader(true)
@@ -265,13 +325,13 @@ class SelectDetailsComponent extends Component {
             let setData = []
             let hasSetData = this.state.set.length > 0 ? this.state.set[Number(index)] ? this.state.set[Number(index)].length >= 0 ? -1 : 0 : 0 : 0
             if (value != selectedSubject) {
-               
+
                 this.setState({
                     pickerDate: new Date(),
                     selectedDate: ''
                 })
             }
-        
+
             this.setState({
                 errClass: '',
                 errSection: '',
@@ -284,16 +344,16 @@ class SelectDetailsComponent extends Component {
                 setIndex: hasSetData
             })
         }
-         
+
         else if (type == 'set') {
             if (value != selectSet) {
-               
+
                 this.setState({
                     pickerDate: new Date(),
                     selectedDate: ''
                 })
             }
-            
+
             this.setState({
                 errClass: '',
                 errSection: '',
@@ -312,7 +372,7 @@ class SelectDetailsComponent extends Component {
 
 
         let hasCacheData = await getRegularStudentExamApi();
-        
+
         let cacheFilterData = hasCacheData != null ?  hasCacheData.filter((element)=>{
             if (element.key == this.props.loginData.data.school.schoolId && element.class == selectedClass && element.section == selectedSection) {
                 return true
@@ -325,7 +385,7 @@ class SelectDetailsComponent extends Component {
             this.setState({isLoading: false, calledStudentsData: true})
             storeFactory.dispatch(this.dispatchStudentExamData(cacheFilterData[0].data2))
             this.setState({isLoading: false})
-        } else if(hasNetwork){      
+        } else if(hasNetwork){
         this.setState({
             calledStudentsData: true,
         }, () => {
@@ -532,9 +592,9 @@ dispatchStudentExamData(payload){
                                         examDates.push(o.examDate)
                                         subjects.push(o.subject)
                                         set.push(o.hasOwnProperty("set") && o.set.length > 0 ? o.set  : [])
-                            
+
                                     })
-                    
+
                                     this.setState({
                                         errSection: '',
                                         sectionValid: true,
@@ -563,11 +623,11 @@ dispatchStudentExamData(payload){
                                 if (loginData.data.school.hasOwnProperty("offlineMode") && loginData.data.school.offlineMode && hasNetwork && this.state.sectionValid == true) {
                                     let getStudentExamCache = await getRegularStudentExamApi();
                                     if (getStudentExamCache != null) {
-                                        
+
                                         let result = getStudentExamCache.findIndex((e)=>e.key == loginData.data.school.schoolId && e.class == selectedClass && e.section == selectedSection)
                                         let hasSubject = getStudentExamCache.findIndex((e)=> e.key == loginData.data.school.schoolId && e.class == selectedClass && e.section == selectedSection && e.hasOwnProperty("subject"))
                                         if (result > -1 && hasSubject == -1) {
-                                            getStudentExamCache[result].data = studentsAndExamData 
+                                            getStudentExamCache[result].data = studentsAndExamData
                                         } else if(hasSubject == -1){
                                             let payload = {
                                                 key :`${loginData.data.school.schoolId}`,
@@ -691,7 +751,7 @@ dispatchStudentExamData(payload){
                 let data = JSON.parse(studentsAndExamData.config.data)
                 if (studentsAndExamData && data.hasOwnProperty("subject")) {
 
-                    this.setState({isCalledStudentAndExam: false, isLoading: false})                    
+                    this.setState({isCalledStudentAndExam: false, isLoading: false})
                     const hasNetwork = await checkNetworkConnectivity();
                     if (studentsAndExamData && studentsAndExamData.status && studentsAndExamData.status == 200) {
                         if (loginData.data.school.hasOwnProperty("offlineMode") && loginData.data.school.offlineMode && hasNetwork) {
@@ -702,7 +762,7 @@ dispatchStudentExamData(payload){
                                 let hasSubject = getStudentExamCache.findIndex((e)=> e.key == loginData.data.school.schoolId && e.class == selectedClass && e.section == selectedSection && e.hasOwnProperty("subject"))
                                 let resultDataIndex = getStudentExamCache.findIndex((e)=> e.key == loginData.data.school.schoolId && e.class == selectedClass && e.section == selectedSection)
                                 let hasSetValue = getStudentExamCache.findIndex((e)=> e.key == loginData.data.school.schoolId && e.class == selectedClass && e.section == selectedSection && e.hasOwnProperty("subject") && e.hasOwnProperty("set") ? e.set == setValue : false)
-                                
+
                                 let subjBool = hasSubject >= 0 ? true : false;
 
 
@@ -733,7 +793,7 @@ dispatchStudentExamData(payload){
                             set: selectSet ,
                             data: studentsAndExamData.data
                         }
-    
+
                         let studentsAndExamArr = await getStudentsExamData()
                         let finalStudentsAndExamArr = []
                         if (studentsAndExamArr != null) {
@@ -809,7 +869,7 @@ dispatchStudentExamData(payload){
             })
             return false
         }
-     
+
 
         return true
     }
@@ -817,7 +877,7 @@ dispatchStudentExamData(payload){
     onSubmitClick = () => {
         const { selectedClass, selectedClassId, selectedSection, examTestID, subIndex, examDate, subjectsData ,selectSet} = this.state
         const { loginData } = this.props
-       
+
         this.setState({
             errClass: '',
             errSub: '',
@@ -826,7 +886,7 @@ dispatchStudentExamData(payload){
             isLoading: true
         }, () => {
             let valid = this.validateFields()
-           
+
             if (valid) {
                 let selectedset = []
                 selectedset.push(selectSet)
@@ -861,7 +921,7 @@ dispatchStudentExamData(payload){
 
 
             let hasCacheData = await getRegularStudentExamApi();
-            let cacheFilterData = hasCacheData != null 
+            let cacheFilterData = hasCacheData != null
             ?
             hasCacheData.filter((element)=>{
                 let conditionSwitch =
@@ -935,11 +995,11 @@ dispatchStudentExamData(payload){
             this.setState({ dateVisible: false })
         }
     }
-    
-     
+
+
 
     render() {
-        const { isLoading, defaultSelected, classList, classListIndex, selectedClass, sectionList,setIndex,ExamSetArray, sectionListIndex, selectedSection, pickerDate, subArr, selectedSubject,selectSet, subIndex, errClass, errSub,errSet, errSection, sectionValid, dateVisible,disabled } = this.state
+        const { isLoading, defaultSelected, classList, classListIndex, selectedClass, sectionList,setIndex,ExamSetArray, sectionListIndex, selectedSection, pickerDate, subArr, selectedSubject,selectSet, subIndex, errClass, errSub,errSet, errSection, sectionValid, dateVisible,disabled,classopen,classvalue,sectionopen,sectionvalue } = this.state
         const { loginData, multiBrandingData, modalStatus, modalMessage } = this.props
         const BrandLabel = multiBrandingData && multiBrandingData.screenLabels && multiBrandingData.screenLabels.selectDetails[0]
         return (
@@ -989,45 +1049,75 @@ dispatchStudentExamData(payload){
                         <Text style={styles.header1TextStyle}>
                             {Strings.please_select_below_details}
                         </Text>
-                        <View style={{ backgroundColor: 'white', paddingHorizontal: '5%', minWidth: '100%', paddingVertical: '10%', borderRadius: 4 }}>
-                       
-                           
-                            <View style={[styles.fieldContainerStyle, { paddingBottom: classListIndex != -1 ? 0 : '10%' }]}>
+                        <View style={{ backgroundColor: 'white', paddingHorizontal: '5%', minWidth: '100%', paddingBottom: '30%', borderRadius: 4 }}>
+
+
+                            <View style={[{paddingBottom: classListIndex != -1 ? 0 : '5%',paddingHorizontal: '18%'}]}>
                                 <View style={{ flexDirection: 'row' }}>
 
                                     <Text style={[styles.labelTextStyle]}>{BrandLabel && BrandLabel.Class ? BrandLabel.Class : Strings.class_text}</Text>
 
                                     {errClass != '' && <Text style={[styles.labelTextStyle, { color: AppTheme.ERROR_RED, fontSize: AppTheme.FONT_SIZE_TINY + 1, width: '60%', textAlign: 'right', fontWeight: 'normal' }]}>{errClass}</Text>}
                                 </View>
-                                <DropDownMenu
-                                    options={classList}
-                                    onSelect={(idx, value) => this.onDropDownSelect(idx, value, 'class')}
-                                    defaultData={defaultSelected}
-                                    defaultIndex={classListIndex}
-                                    selectedData={selectedClass}
-                                    icon={require('../../assets/images/arrow_down.png')}
-                                />
+                                    <DropDownPicker
+                                        open={classopen}
+                                        value={classvalue}
+                                        items={classList}
+                                        setOpen={this.setClassOpen}
+                                        setValue={this.setClassValue}
+                                        setItems={this.setClassItems}
+                                        dropDownDirection="AUTO"
+                                        bottomOffset={100}
+                                        selectedItemLabelStyle={{
+                                        fontWeight: "bold"
+                                        }}
+                                        onSelectItem={(item) => this.onDropDownSelect(item.key, item.value, 'class')}
+                                        placeholder="Click & Choose State-District"
+                                        searchable={true}
+                                        searchPlaceholder="Type to Search and Select the state-district"
+                                        autoScroll={true}
+                                        showArrowIcon={true}
+                                        showTickIcon={true}
+                                        closeAfterSelecting={true}
+                                        zIndex={3000}
+                                        zIndexInverse={1000}
+                                    />
                             </View>
                             {classListIndex != -1 &&
-                                <View style={[styles.fieldContainerStyle, { paddingBottom: sectionListIndex != -1 && sectionValid ? 0 : '10%' }]}>
+                                <View style={[styles.fieldContainerStyle, { paddingBottom: sectionListIndex != -1 && sectionValid ? 0 : '10%',paddingHorizontal: '18%' }]}>
                                     <View style={{ flexDirection: 'row' }}>
 
                                         <Text style={[styles.labelTextStyle]}>{BrandLabel && BrandLabel.Section ? BrandLabel.Section : Strings.section}</Text>
 
-                                        {errSection != '' && <Text style={[styles.labelTextStyle, { color: AppTheme.ERROR_RED, fontSize: AppTheme.FONT_SIZE_TINY + 1, width: '60%', textAlign: 'right', fontWeight: 'normal' }]}>{errSection}</Text>}
+                                        {errSection != '' && <Text style={[styles.labelTextStyle, { color: AppTheme.GREY, fontSize: AppTheme.FONT_SIZE_TINY + 1, width: '60%', textAlign: 'right', fontWeight: 'normal' }]}>{errSection}</Text>}
                                     </View>
-                                    <DropDownMenu
-                                        options={sectionList}
-                                        onSelect={(idx, value) => this.onDropDownSelect(idx, value, 'section')}
-                                        defaultData={defaultSelected}
-                                        defaultIndex={sectionListIndex}
-                                        selectedData={selectedSection}
-                                        icon={require('../../assets/images/arrow_down.png')}
+                                    <DropDownPicker
+                                        open={sectionopen}
+                                        value={sectionvalue}
+                                        items={sectionList}
+                                        setOpen={this.setSectionOpen}
+                                        setValue={this.setSectionValue}
+                                        setItems={this.setSectionItems}
+                                        dropDownDirection="AUTO"
+                                        bottomOffset={100}
+                                        selectedItemLabelStyle={{
+                                        fontWeight: "bold"
+                                        }}
+                                        onSelectItem={(item) => this.onDropDownSelect(item.key, item.value, 'section')}
+                                        placeholder="Click & Choose Block-Village"
+                                        searchable={true}
+                                        searchPlaceholder="Type to Search and Select the block-village"
+                                        autoScroll={true}
+                                        showArrowIcon={true}
+                                        showTickIcon={true}
+                                        closeAfterSelecting={true}
+                                        zIndex={2000}
+                                        zIndexInverse={2000}
                                     />
                                 </View>}
                             {
                                 sectionListIndex != -1 && sectionValid &&
-                                <View style={[styles.fieldContainerStyle, { paddingBottom: subIndex != -1 ? '10%' : 0 }]}>
+                                <View style={[styles.fieldContainerStyle, { paddingBottom: subIndex != -1 ? '10%' : 0,paddingHorizontal: '18%' }]}>
                                     <View style={{ flexDirection: 'row' }}>
                                         <Text style={[styles.labelTextStyle]}>{BrandLabel && BrandLabel.Subject ? BrandLabel.Subject : Strings.subject}</Text>
                                         {errSub != '' && <Text style={[styles.labelTextStyle, { color: AppTheme.ERROR_RED, fontSize: AppTheme.FONT_SIZE_TINY + 1, width: '50%', textAlign: 'right', fontWeight: 'normal' }]}>{errSub}</Text>}
@@ -1045,12 +1135,12 @@ dispatchStudentExamData(payload){
 
                       {
                             ExamSetArray && ExamSetArray.length > 0 && ExamSetArray[subIndex] != null &&
-                                <View style={[styles.fieldContainerStyle, {bottom:25, paddingBottom: subIndex != -1 ? '10%' : 0 }]}>
+                                <View style={[styles.fieldContainerStyle, {bottom:25, paddingBottom: subIndex != -1 ? '10%' : 0,paddingHorizontal: '18%',display: 'none'}]}>
                                     <View style={{ flexDirection: 'row' }}>
                                         <Text style={[styles.labelTextStyle]}>{BrandLabel && BrandLabel.Set ? BrandLabel.Set : Strings.set_text}</Text>
                                         {errSet != '' && <Text style={[styles.labelTextStyle, { color: AppTheme.ERROR_RED, fontSize: AppTheme.FONT_SIZE_TINY + 1, width: '50%', textAlign: 'right', fontWeight: 'normal' }]}>{errSet}</Text>}
                                     </View>
-    
+
                                     <DropDownMenu
                                         options={(["NONE"]).concat(ExamSetArray[subIndex])}
                                         onSelect={(idx, value) => this.onDropDownSelect(idx, value, 'set')}
@@ -1066,8 +1156,6 @@ dispatchStudentExamData(payload){
                         </View>
 
                     </View>
-
-                </ScrollView>
                 <View style={styles.btnContainer}>
                     <ButtonComponent
                         customBtnStyle={[styles.nxtBtnStyle, { backgroundColor: this.props.multiBrandingData ? this.props.multiBrandingData.themeColor1 : AppTheme.BLUE }]}
@@ -1075,6 +1163,9 @@ dispatchStudentExamData(payload){
                         onPress={this.onSubmitClick}
                     />
                 </View>
+
+                </ScrollView>
+
                 {dateVisible && (
                     <DateTimePicker
                         display="default"

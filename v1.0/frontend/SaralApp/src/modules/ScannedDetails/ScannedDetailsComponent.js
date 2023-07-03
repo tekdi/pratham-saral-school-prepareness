@@ -83,7 +83,7 @@ const ScannedDetailsComponent = ({
     const [isOmrOptions, setOmrOptions] = useState(false)
     const [isAlphaNumeric, setIsAlphaNumeric] = useState(false)
     const [filterData, setFilterData] = useState({data: [], len: 0})
-    
+
 
     const BrandLabel = multiBrandingData && multiBrandingData.screenLabels && multiBrandingData.screenLabels.scannedDetailComponent[0]
     const defaultValidateError = ocrLocalResponse.layout && ocrLocalResponse.layout.resultValidation && ocrLocalResponse.layout.resultValidation.validate.errorMsg
@@ -93,7 +93,7 @@ const ScannedDetailsComponent = ({
     const idValidateExp = ocrLocalResponse.layout && ocrLocalResponse.layout.idValidation && ocrLocalResponse.layout.idValidation.validate.regExp
     const jsonLabels = ocrLocalResponse.layout && ocrLocalResponse.layout.resultScreenLabels
     const listbrandlabel = multiBrandingData && multiBrandingData.screenLabels && multiBrandingData.screenLabels.scannedDetailComponent[0] && multiBrandingData.screenLabels.scannedDetailComponent[0].ListTableHeading[0]
-    
+
     let regexExp = idValidateExp
     let number = studentId;
     let regex = new RegExp(regexExp)
@@ -228,7 +228,7 @@ const ScannedDetailsComponent = ({
         if(ocrLocalResponse.layout.cells[1].rois[0].extractionMethod == "BLOCK_ALPHANUMERIC_CLASSIFICATION"){
             setIsAlphaNumeric(true)
         }
-     
+
         if (ocrLocalResponse.layout.hasOwnProperty("pages") && ocrLocalResponse.layout.pages > 0) {
             setMultiPage(ocrLocalResponse.layout.pages)
             setNextBtn("SCAN PAGE #2")
@@ -281,7 +281,7 @@ const ScannedDetailsComponent = ({
             }
         });
 
-       let removeZeroRollStd = marTemp.filter((data, i) => { 
+       let removeZeroRollStd = marTemp.filter((data, i) => {
             if ((data.RollNo) != 0) {
                 return true
             }
@@ -418,7 +418,7 @@ const ScannedDetailsComponent = ({
                 let regex = new RegExp(regexExp)
                 result = regex.test(number);
                   setOmrResult(defaultValidateError)
-                  
+
 
             }
         }
@@ -426,9 +426,9 @@ const ScannedDetailsComponent = ({
     }
 
 
-    const goNextFrame = () => {  
+    const goNextFrame = () => {
         let regexvalidate = omrValidation()
-    
+
         const addedStd = stdAddRollData.indexOf(studentId);
         var duplication = false;
 
@@ -436,7 +436,7 @@ const ScannedDetailsComponent = ({
             duplication = true
         } else {
             duplication = false
-            
+
         }
 
         if (!toggleCheckBox &&  regexvalidate[0]) {
@@ -445,7 +445,7 @@ const ScannedDetailsComponent = ({
         else if (duplication) {
             callCustomModal(Strings.message_text, Strings.Student_ID_Shouldnt_be_duplicated,false);
         }
-       
+
         else if (!studentValid && !toggleCheckBox) {
             showErrorMessage(Strings.please_correct_student_id)
             setStdErr(Strings.please_correct_student_id)
@@ -605,7 +605,7 @@ const ScannedDetailsComponent = ({
                     }
                     let putTrainingData = loginData.data.school.storeTrainingData ? marks_data.trainingData = value.consolidatedPrediction != value.predictedMarks ? value.trainingDataSet : [] : ''
                     marks_data.questionId = value.format.name,
-                    marks_data.obtainedMarks = value.consolidatedPrediction? value.consolidatedPrediction : ""
+                    marks_data.obtainedMarks = value.consolidatedPrediction? value.rois.length === 1 && value.consolidatedPrediction === '' ? '0' : value.rois.length === 1 && value.consolidatedPrediction === '0'? '1' :value.consolidatedPrediction : ""
                     stdTotalMarks = Number(stdTotalMarks) + Number(value.consolidatedPrediction)
                     stdMarks_info.push(marks_data)
 
@@ -657,25 +657,25 @@ const ScannedDetailsComponent = ({
                 filterData = getDataFromLocal.filter((e) => {
                    let findSection = false
                    findSection = e.studentsMarkInfo.some((item) => item.section == filteredData.section)
-   
+
                    if (filteredData.class == e.classId && e.examDate == filteredData.examDate && e.subject == filteredData.subject && findSection) {
                        return true
                    }
                })
             } else {
-                
+
                  filterData = getDataFromLocal.filter((e) => {
-    
+
                     //In minimal mode need to find organization id as we kept studentId
                     if (e.roiId == roiData.data.roiId && loginData.data.school.hasOwnProperty("offlineMode") & loginData.data.school.offlineMode) {
                         if (loginData.data.school.schoolId == e.key) {
                             return true
                         } else {
                             return false
-                            
+
                         }
                     } else if (e.roiId == roiData.data.roiId) {
-                        return true   
+                        return true
                     }
                 })
 
@@ -889,7 +889,10 @@ const ScannedDetailsComponent = ({
 
     const markBorderOnCell = (element) => {
         const regexValidate = omrValidation()
-        if (element.consolidatedPrediction.length == 0 ) {
+        if (element.rois.length === 1 ){
+            return AppTheme.INACTIVE_BTN_TEXT
+        }
+        else if (element.consolidatedPrediction.length == 0 ) {
             return AppTheme.ERROR_RED
         }
         else if (element.format.name == neglectData[2] && obtnmarkErr) {
@@ -949,7 +952,7 @@ const ScannedDetailsComponent = ({
                     let number = consolidated;
                     let regex = new RegExp(regexExp)
                     result = regex.test(number);
-                    
+
                     if (!result) {
                         regextResult = !result
                 errorMesaage = regexErrormsg
@@ -966,7 +969,7 @@ const ScannedDetailsComponent = ({
         if (!studentValid && !toggleCheckBox) {
             showErrorMessage(Strings.please_correct_student_id)
         }
-        else if (isStudentValid) {
+        else if (isStudentValid && !minimalFlag) {
             showErrorMessage(Strings.student_id_should_be_same)
         }
         else if (regexvalidate[0]) {
@@ -1105,12 +1108,12 @@ const ScannedDetailsComponent = ({
     }
 
     const goBackPage = () => {
-        
+
         if (currentIndex - 1 >= 1) {
             if (!studentValid && !toggleCheckBox) {
                 showErrorMessage(Strings.please_correct_student_id)
             }
-            else if (isStudentValid){
+            else if (isStudentValid && !minimalFlag){
                 showErrorMessage(Strings.student_id_should_be_same)
             } else {
                 setNextBtn(`Scan Page#${currentIndex}`)
@@ -1151,17 +1154,17 @@ const ScannedDetailsComponent = ({
         let objects = []
         data = filterData.len > 0 ? filterData.data : data
         data.map((e) => {
-            
+
             let tagArrayData = ''
             if ( loginData.data.school.hasOwnProperty("tags") && loginData.data.school.tags) {
                 tagArrayData = callTagArrayData(e.format.name)
             }
             let data = {
                 "questionId": e.format.name,
-                "obtainedMarks": e.consolidatedPrediction,
+                "obtainedMarks": e.rois.length === 1 && e.consolidatedPrediction === '' ? '0' : e.rois.length === 1 && e.consolidatedPrediction === '0'? '1' :e.consolidatedPrediction,
                 "predictedMarks": loginData.data.school.storeTrainingData ? e.predictedMarks : '',
                 "predictionConfidence": loginData.data.school.storeTrainingData ? e.consolidatedPrediction != e.predictedMarks ? e.predictionConfidence : '' : '',
-                
+
             }
 
             if (loginData.data.school.hasOwnProperty("tags") && loginData.data.school.tags) {
@@ -1206,7 +1209,7 @@ const ScannedDetailsComponent = ({
                     "studentAvailability": true,
                 }
             ]
-            
+
         }
         if(filteredData.hasOwnProperty("set")){
             saveObj.studentsMarkInfo[0].set = minimalFlag ? "" : filteredData.set
@@ -1355,7 +1358,7 @@ const ScannedDetailsComponent = ({
                                                         }}
                                                         value={studentId}
                                                         editable={edit}
-                                
+
                                                         />
                                                         {
                                                             !minimalFlag
@@ -1451,7 +1454,7 @@ const ScannedDetailsComponent = ({
                       }
                     </View>
 
-                                          
+
                                             {
                                                 newArrayValue.map((element, index) => {
                                                     return (
@@ -1473,7 +1476,7 @@ const ScannedDetailsComponent = ({
                                                             />
                                                             <MarksHeaderTable
                                                                 customRowStyle={{height:height/12, width: loginData.data.school.tags ? '25%' : isAlphaNumeric ? '50%' : '30%', }}
-                                                                rowTitle={element.consolidatedPrediction}
+                                                                rowTitle={element.rois.length === 1 && element.consolidatedPrediction === '' ? '0' : element.rois.length === 1 && element.consolidatedPrediction === '0'? '1' :element.consolidatedPrediction}
                                                                 rowBorderColor={markBorderOnCell(element)}
                                                                 editable={true}
                                                                 keyboardType={element.hasOwnProperty("omrOptions") ?  'name' : ''}
@@ -1530,10 +1533,10 @@ const ScannedDetailsComponent = ({
 
 
                     {isLoading && <Spinner animating={isLoading} iconShow={false} />}
-                    <TaggingModal 
-                        setIsModalVisible={setIsModalVisible} 
-                        isModalVisible={isModalVisible} 
-                        tagData={tagData} 
+                    <TaggingModal
+                        setIsModalVisible={setIsModalVisible}
+                        isModalVisible={isModalVisible}
+                        tagData={tagData}
                         setTagData={setTagData}
                         studentsAndExamData={studentsAndExamData}
                         bgColor={multiBrandingData ? multiBrandingData.themeColor1 : AppTheme.BLUE}

@@ -4,6 +4,7 @@ const Schools = require('../models/school')
 const Classes = require("../models/classes")
 const Students = require("../models/students")
 const Marks = require("../models/marks")
+const User = require("../models/users")
 const schoolController = require("../controller/schoolController")
 const { stringObject } = require('../utils/commonUtils');
 const { auth } = require('../middleware/auth');
@@ -33,6 +34,15 @@ router.post('/schools/create', async (req, res) => {
             state: school.state,
             district: school.district
         }
+
+        const userData = new User({
+            userId: req.body.schoolId,
+            name: req.body.name,
+            schoolId: req.body.schoolId,
+            password: req.body.password,
+        });
+
+        await userData.save();
 
         res.status(201).send({ schools })
     } catch (e) {
