@@ -124,4 +124,63 @@ router.patch('/schools/:schoolId', async (req, res) => {
     }
 })
 
+router.post('/schools/createMultipleUsers', async (req, res) => {
+    
+    const school = new Schools({ ...req.body })
+    try {
+
+        school.state = req.body.state.toLowerCase()
+        school.schoolId = req.body.schoolId.toLowerCase()
+
+        if (req.body.autoSync) school.autoSync = req.body.autoSync
+        if (req.body.autoSyncFrequency) school.autoSyncFrequency = req.body.autoSyncFrequency
+        if (req.body.tags) school.tags = req.body.tags
+        if (req.body.autoSyncBatchSize) school.autoSyncBatchSize = req.body.autoSyncBatchSize
+
+
+        await school.save()
+
+        let schools = {
+            storeTrainingData: school.storeTrainingData,
+            name: school.name,
+            schoolId: school.schoolId,
+            state: school.state,
+            district: school.district
+        }
+
+        // const userData = new User({
+        //     userId: req.body.schoolId,
+        //     name: req.body.name,
+        //     schoolId: req.body.schoolId,
+        //     password: req.body.password,
+        // });
+
+        // await userData.save();
+
+        let usersData = []
+        for (const iterator of req.body.users) {
+            let obj = {
+                userId: req.body.schoolId,
+                name: req.body.name,
+                schoolId: req.body.schoolId,
+                password: iterator.password,
+            }
+
+            usersData.push(obj)
+        }
+
+
+        await User.create(usersData)
+
+        res.status(201).send({ schools })
+    } catch (e) {
+        if (e.message.includes(' duplicate key error')) {
+            let key = Object.keys(e.keyValue)
+            res.status(401).send({ error: `${key[0]}: ${e.keyValue[key[0]]} already exist` })
+        } else {
+            res.status(400).send(e)
+        }
+    }
+})
+
 module.exports = router
