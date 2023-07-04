@@ -55,7 +55,7 @@ router.post('/schools/create', async (req, res) => {
     }
 })
 
-router.get('/schools', async (req, res) => {
+router.get('/schools', auth, async (req, res) => {
     try {
         const school = await Schools.find({})
         let schools = []
@@ -77,7 +77,7 @@ router.get('/schools', async (req, res) => {
     }
 })
 
-router.delete('/schools/:schoolId', async (req, res) => {
+router.delete('/schools/:schoolId', auth, async (req, res) => {
     try {
         const school = await Schools.findOne({ schoolId: req.params.schoolId.toLowerCase() })
         if (!school) return res.status(404).send({ message: 'School Id does not exist.' })
@@ -96,7 +96,7 @@ router.delete('/schools/:schoolId', async (req, res) => {
     }
 })
 
-router.patch('/schools/:schoolId', async (req, res) => {
+router.patch('/schools/:schoolId', auth, async (req, res) => {
     try {
         if (Object.keys(req.body).length === 0) res.status(400).send({ message: 'Validation error.' })
         const updates = Object.keys(req.body)
