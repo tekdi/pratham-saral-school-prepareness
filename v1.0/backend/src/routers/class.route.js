@@ -43,7 +43,7 @@ router.post('/classes', auth, async (req, res) => {
             } else {
                 let updatedSections = dataExists['sections'] ? dataExists['sections'].concat(doc['sections']) : doc['sections']
                 dataExists['sections'] = _.uniqBy(updatedSections, 'section');
-                
+
                 await dataExists.save()
                 let response = {
                     sections: doc.sections,
@@ -100,14 +100,14 @@ router.put('/classes', auth, async (req, res) => {
                     createdAt: classModel.createdAt,
                     updatedAt: classModel.updatedAt
                 }
-                
+
                 res.status(201).send(response)
             } catch (e) {
                 console.log(e);
                 res.status(400).send(e)
             }
         } else {
-            
+
             let updatedSections = classData['sections'] ? classData['sections'].concat(req.body['sections']) : req.body['sections']
             classData['sections'] = _.uniqBy(updatedSections, 'section');
             await classData.save()
@@ -119,7 +119,7 @@ router.put('/classes', auth, async (req, res) => {
                 createdAt: classData.createdAt,
                 updatedAt: classData.updatedAt
             }
-            
+
             res.send(response)
         }
     }
@@ -161,6 +161,27 @@ router.delete('/classes', auth, async (req, res) => {
     catch (e) {
         console.log(e);
         res.status(400).send(e)
+    }
+})
+
+router.get('/classes', auth, async (req, res) => {
+    try {
+        const classData = await Classes.find({})
+        let classes = []
+        if (classData) {
+            classData.forEach(element => {
+                let obj = {
+                    className: element.className,
+                    classId: element.classId,
+                    sections: element.sections,
+                    schoolId: element.schoolId,
+                }
+                classes.push(obj)
+            });
+        }
+        res.send({ classes })
+    } catch (e) {
+        res.send(e)
     }
 })
 
