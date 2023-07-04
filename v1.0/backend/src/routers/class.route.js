@@ -164,4 +164,25 @@ router.delete('/classes', auth, async (req, res) => {
     }
 })
 
+router.get('/classes', auth, async (req, res) => {
+    try {
+        const classData = await Classes.find({})
+        let classes = []
+        if (classData) {
+            classData.forEach(element => {
+                let obj = {
+                    className: element.className,
+                    classId: element.classId,
+                    sections: element.sections,
+                    schoolId: element.schoolId,
+                }
+                classes.push(obj)
+            });
+        }
+        res.send({ classes })
+    } catch (e) {
+        res.send(e)
+    }
+})
+
 module.exports = router

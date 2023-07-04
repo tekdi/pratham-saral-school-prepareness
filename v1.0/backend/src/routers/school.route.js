@@ -14,6 +14,7 @@ router.route('/schools/login').post(schoolController.loginSchool)
 
 
 router.post('/schools/create', async (req, res) => {
+    console.log("schools/create", req.body)
     const school = new Schools({ ...req.body })
     try {
 
@@ -55,7 +56,7 @@ router.post('/schools/create', async (req, res) => {
     }
 })
 
-router.get('/schools', async (req, res) => {
+router.get('/schools', auth, async (req, res) => {
     try {
         const school = await Schools.find({})
         let schools = []
@@ -77,7 +78,7 @@ router.get('/schools', async (req, res) => {
     }
 })
 
-router.delete('/schools/:schoolId', async (req, res) => {
+router.delete('/schools/:schoolId', auth, async (req, res) => {
     try {
         const school = await Schools.findOne({ schoolId: req.params.schoolId.toLowerCase() })
         if (!school) return res.status(404).send({ message: 'School Id does not exist.' })
@@ -96,7 +97,7 @@ router.delete('/schools/:schoolId', async (req, res) => {
     }
 })
 
-router.patch('/schools/:schoolId', async (req, res) => {
+router.patch('/schools/:schoolId', auth, async (req, res) => {
     try {
         if (Object.keys(req.body).length === 0) res.status(400).send({ message: 'Validation error.' })
         const updates = Object.keys(req.body)
@@ -121,6 +122,67 @@ router.patch('/schools/:schoolId', async (req, res) => {
     catch (e) {
         console.log(e);
         res.status(400).send(e)
+    }
+})
+
+router.post('/schools/createMultipleUsers', async (req, res) => {
+    console.log("schools/createMultipleUsers", req.body)
+    const school = new Schools({ ...req.body })
+    try {
+
+        school.state = req.body.state.toLowerCase()
+        school.schoolId = req.body.schoolId.toLowerCase()
+
+        if (req.body.autoSync) school.autoSync = req.body.autoSync
+        if (req.body.autoSyncFrequency) school.autoSyncFrequency = req.body.autoSyncFrequency
+        if (req.body.tags) school.tags = req.body.tags
+        if (req.body.autoSyncBatchSize) school.autoSyncBatchSize = req.body.autoSyncBatchSize
+
+        console.log("school", school)
+
+        await school.save()
+
+        let schools = {
+            storeTrainingData: school.storeTrainingData,
+            name: school.name,
+            schoolId: school.schoolId,
+            state: school.state,
+            district: school.district
+        }
+
+        // const userData = new User({
+        //     userId: req.body.schoolId,
+        //     name: req.body.name,
+        //     schoolId: req.body.schoolId,
+        //     password: req.body.password,
+        // });
+
+        // await userData.save();
+
+        let usersData = []
+        for (const iterator of req.body.users) {
+            let obj = {
+                userId: req.body.schoolId,
+                name: req.body.name,
+                schoolId: req.body.schoolId,
+                password: iterator.password,
+            }
+
+            usersData.push(obj)
+        }
+
+        console.log("usersData", usersData)
+
+        await User.create(usersData)
+
+        res.status(201).send({ schools })
+    } catch (e) {
+        if (e.message.includes(' duplicate key error')) {
+            let key = Object.keys(e.keyValue)
+            res.status(401).send({ error: `${key[0]}: ${e.keyValue[key[0]]} already exist` })
+        } else {
+            res.status(400).send(e)
+        }
     }
 })
 
