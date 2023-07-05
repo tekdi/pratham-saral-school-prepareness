@@ -7,8 +7,8 @@ const { stringObject } = require('../utils/commonUtils');
 exports.loginSchool = async (req, res, next) => {
   try {
     let userId = {}
-    if (req.body.schoolId) {
-      userId = req.body.schoolId.toLowerCase()
+    if (req.body.userId) {
+      userId = req.body.userId.toLowerCase()
     }
   
     const users = await Helper.findByCredentials(userId, req.body.password)

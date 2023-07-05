@@ -124,55 +124,19 @@ router.patch('/schools/:schoolId', async (req, res) => {
     }
 })
 
-router.post('/schools/createMultipleUsers', async (req, res) => {
-    
-    const school = new Schools({ ...req.body })
+router.post('/schools/createUsers', async (req, res) => {
+
+    const user = new User({ ...req.body })
     try {
+        await user.save()
 
-        school.state = req.body.state.toLowerCase()
-        school.schoolId = req.body.schoolId.toLowerCase()
-
-        if (req.body.autoSync) school.autoSync = req.body.autoSync
-        if (req.body.autoSyncFrequency) school.autoSyncFrequency = req.body.autoSyncFrequency
-        if (req.body.tags) school.tags = req.body.tags
-        if (req.body.autoSyncBatchSize) school.autoSyncBatchSize = req.body.autoSyncBatchSize
-
-
-        await school.save()
-
-        let schools = {
-            storeTrainingData: school.storeTrainingData,
-            name: school.name,
-            schoolId: school.schoolId,
-            state: school.state,
-            district: school.district
+        let users = {
+            userId: user.userId,
+            name: user.name,
+            schoolId: user.schoolId,
         }
 
-        // const userData = new User({
-        //     userId: req.body.schoolId,
-        //     name: req.body.name,
-        //     schoolId: req.body.schoolId,
-        //     password: req.body.password,
-        // });
-
-        // await userData.save();
-
-        let usersData = []
-        for (const iterator of req.body.users) {
-            let obj = {
-                userId: req.body.schoolId,
-                name: req.body.name,
-                schoolId: req.body.schoolId,
-                password: iterator.password,
-            }
-
-            usersData.push(obj)
-        }
-
-
-        await User.create(usersData)
-
-        res.status(201).send({ schools })
+        res.status(201).send({ users })
     } catch (e) {
         if (e.message.includes(' duplicate key error')) {
             let key = Object.keys(e.keyValue)
