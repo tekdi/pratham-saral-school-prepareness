@@ -164,24 +164,37 @@ router.delete('/classes', auth, async (req, res) => {
     }
 })
 
-router.get('/classes', auth, async (req, res) => {
+router.get('/classes/:classId', auth, async (req, res) => {
     try {
-        const classData = await Classes.find({})
-        let classes = []
-        if (classData) {
-            classData.forEach(element => {
-                let obj = {
-                    className: element.className,
-                    classId: element.classId,
-                    sections: element.sections,
-                    schoolId: element.schoolId,
-                }
-                classes.push(obj)
-            });
+
+        const match = {
+            schoolId: req.school.schoolId,
+            classId: req.params.classId.toLowerCase()
         }
-        res.send({ classes })
-    } catch (e) {
-        res.send(e)
+
+        const classData = await Classes.findOne(match).lean();
+        
+        if (classData) {
+
+            let classobj = {
+                className: classData.className,
+                classId: classData.classId,
+                sections: classData.sections,
+                schoolId: classData.schoolId,
+            }
+
+            res.send( classobj )
+
+        } else {
+
+            res.status(404).send({ message: 'class Id does not exist.' })
+
+        }
+
+    }
+    catch (e) {
+        console.log(e);
+        res.status(400).send(e)
     }
 })
 
