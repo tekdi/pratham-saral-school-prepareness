@@ -169,7 +169,7 @@ router.get('/classes/:classId', auth, async (req, res) => {
 
         const match = {
             schoolId: req.school.schoolId,
-            classId: req.params.classId.toLowerCase()
+            classId: req.params.classId
         }
 
         const classData = await Classes.findOne(match).lean();
