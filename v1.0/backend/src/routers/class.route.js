@@ -43,7 +43,7 @@ router.post('/classes', auth, async (req, res) => {
             } else {
                 let updatedSections = dataExists['sections'] ? dataExists['sections'].concat(doc['sections']) : doc['sections']
                 dataExists['sections'] = _.uniqBy(updatedSections, 'section');
-                
+
                 await dataExists.save()
                 let response = {
                     sections: doc.sections,
@@ -100,14 +100,14 @@ router.put('/classes', auth, async (req, res) => {
                     createdAt: classModel.createdAt,
                     updatedAt: classModel.updatedAt
                 }
-                
+
                 res.status(201).send(response)
             } catch (e) {
                 console.log(e);
                 res.status(400).send(e)
             }
         } else {
-            
+
             let updatedSections = classData['sections'] ? classData['sections'].concat(req.body['sections']) : req.body['sections']
             classData['sections'] = _.uniqBy(updatedSections, 'section');
             await classData.save()
@@ -119,7 +119,7 @@ router.put('/classes', auth, async (req, res) => {
                 createdAt: classData.createdAt,
                 updatedAt: classData.updatedAt
             }
-            
+
             res.send(response)
         }
     }
@@ -157,6 +157,40 @@ router.delete('/classes', auth, async (req, res) => {
         } else {
             res.status(404).send({ "message": 'Class does not exist.' })
         }
+    }
+    catch (e) {
+        console.log(e);
+        res.status(400).send(e)
+    }
+})
+
+router.get('/classes/:classId', auth, async (req, res) => {
+    try {
+
+        const match = {
+            schoolId: req.school.schoolId,
+            classId: req.params.classId
+        }
+
+        const classData = await Classes.findOne(match).lean();
+        
+        if (classData) {
+
+            let classobj = {
+                className: classData.className,
+                classId: classData.classId,
+                sections: classData.sections,
+                schoolId: classData.schoolId,
+            }
+
+            res.send( classobj )
+
+        } else {
+
+            res.status(404).send({ message: 'class Id does not exist.' })
+
+        }
+
     }
     catch (e) {
         console.log(e);
