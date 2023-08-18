@@ -124,4 +124,27 @@ router.patch('/schools/:schoolId', auth, async (req, res) => {
     }
 })
 
+router.post('/schools/createUsers', async (req, res) => {
+
+    const user = new User({ ...req.body })
+    try {
+        await user.save()
+
+        let users = {
+            userId: user.userId,
+            name: user.name,
+            schoolId: user.schoolId,
+        }
+
+        res.status(201).send({ users })
+    } catch (e) {
+        if (e.message.includes(' duplicate key error')) {
+            let key = Object.keys(e.keyValue)
+            res.status(401).send({ error: `${key[0]}: ${e.keyValue[key[0]]} already exist` })
+        } else {
+            res.status(400).send(e)
+        }
+    }
+})
+
 module.exports = router
