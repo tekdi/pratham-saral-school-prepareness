@@ -39,6 +39,11 @@ classSchema.statics.findClassesBySchools = async (schoolId) => {
     return classes
 }
 
+classSchema.statics.checkClassExists = async (classId) => {
+    const foundClass = await Classes.findOne({ classId });
+    return !!foundClass;
+
+};
 
 const Classes = mongoose.model('Class', classSchema)
 

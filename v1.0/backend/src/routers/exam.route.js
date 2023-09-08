@@ -3,6 +3,8 @@ const Exams = require('../models/exams')
 const { auth } = require('../middleware/auth')
 const Counters = require('../models/counter')
 const router = new express.Router()
+const Classes = require("../models/classes");
+
 
 router.post('/exam', auth, async (req, res) => {
     const body = [...req.body]
@@ -19,6 +21,12 @@ router.post('/exam', auth, async (req, res) => {
         let examExist = await Exams.find({ schoolId, classId: input.classId, examDate: input.examDate, subject: input.subject })
         if (examExist.length) continue
         let examId = await Counters.getValueForNextSequence("examId")
+        const cid =input.classId;
+        const classExists = await Classes.checkClassExists(cid);
+        if (!classExists) {
+          console.log(`Class with ID ${cid} does not exist.`)
+          return res.status(400).send({ error: `Class with ID does not exist` });
+         }
         const examData = new Exams({
             ...input,
             examId,
