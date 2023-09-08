@@ -3,6 +3,7 @@ const router = express.Router();
 const { auth } = require('../middleware/auth')
 const Students = require("../models/students")
 const Marks = require("../models/marks")
+const Classes = require("../models/classes");
 
 const studentController = require('../controller/studentController')
 
@@ -11,6 +12,12 @@ router.post('/fetchStudentsandExamsByQuery',auth,studentController.fetchStudents
 router.post('/student', auth, async (req, res) => {
     try {
         if(!req.body.studentId)  return res.status(400).send({ error: "Student Id is required." })
+
+        const cid =req.body.studentClass[0].classId;
+        const classExists = await Classes.checkClassExists(cid);
+        if (!classExists) {
+          return res.status(400).send({ error: `Class with ID does not exist` });
+        }
     
         const studentClass = req.body.studentClass && req.body.studentClass.length > 0 && [{
             classId: req.body.studentClass[0].classId,
