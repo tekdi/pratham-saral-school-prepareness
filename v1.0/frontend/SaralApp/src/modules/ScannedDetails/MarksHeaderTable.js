@@ -3,6 +3,7 @@ import { View, TextInput, Image,TouchableOpacity,Dimensions } from 'react-native
 import { Assets } from '../../assets';
 import AppTheme from '../../utils/AppTheme';
 import { monospace_FF } from '../../utils/CommonUtils';
+import  { useState } from 'react';
 const { width, height } = Dimensions.get('window')
 const MarksHeaderTable = ({
     customRowStyle,
@@ -20,8 +21,20 @@ const MarksHeaderTable = ({
     setQuestionIdData,
     subject,
     onBlur,
-    isBlur=false
+    isBlur = false,
 }) => {
+
+    const [text, setText] = useState(rowTitle);
+  
+    const handleTextChange = (newText) => {
+     const pattern = /^[0-9]*$/; 
+      if (pattern.test(newText)) {
+        setText(newText);
+        if (onChangeText) {
+          onChangeText(newText);
+        }
+      }
+    };
 
     const setDataIntoModal = (value) => {
         let filterExam = studentsAndExamData.data.exams.filter((data)=> data.subject === subject)
@@ -64,15 +77,15 @@ const MarksHeaderTable = ({
                 </TouchableOpacity>
                 :
                 <TextInput
-                    style={styles.titleTextStyle}
-                    value={rowTitle}
-                    multiline={true}
-                    editable={editable}
-                    onChangeText={onChangeText}
-                    keyboardType={keyboardType}
-                    maxLength={maxLength}
-                    onBlur={onBlur}
-                    blurOnSubmit={isBlur}
+                style={styles.titleTextStyle}
+                value={text}
+                multiline={true}
+                editable={editable}
+                onChangeText={handleTextChange}
+                keyboardType={'numeric'}
+                maxLength={maxLength}
+                onBlur={onBlur}
+                blurOnSubmit={isBlur}
                 />
             }
         </View>
