@@ -3,6 +3,7 @@ import { View, TextInput, Image,TouchableOpacity,Dimensions } from 'react-native
 import { Assets } from '../../assets';
 import AppTheme from '../../utils/AppTheme';
 import { monospace_FF } from '../../utils/CommonUtils';
+import  { useState } from 'react';
 const { width, height } = Dimensions.get('window')
 const MarksHeaderTable = ({
     customRowStyle,
@@ -20,12 +21,20 @@ const MarksHeaderTable = ({
     setQuestionIdData,
     subject,
     onBlur,
-    isBlur=false
-}) => {
-
+    isBlur = false,
+  }) => {
+    const [text, setText] = useState(rowTitle);
+    const handleTextChange = (newText) => {
+     const pattern = /^[0-9]*$/;
+      if (pattern.test(newText)) {
+        setText(newText);
+        if (onChangeText) {
+          onChangeText(newText);
+        }
+      }
+    };
     const setDataIntoModal = (value) => {
         let filterExam = studentsAndExamData.data.exams.filter((data)=> data.subject === subject)
-        
         studentsAndExamData.data.exams.forEach((element) => {
             if (element.subject == subject && element.questions != null) {
                 element.questions.forEach((_el,i)=>{
@@ -37,11 +46,9 @@ const MarksHeaderTable = ({
                         setQuestionIdData(_el.questionId)
                     }
                 })
-
             }
         });
-    }
-
+    };
     let filterExamquesdata = studentsAndExamData && studentsAndExamData.data.exams.filter((data)=> data.subject === subject)
     return (
         <View style={[styles.container, customRowStyle, { borderColor: rowBorderColor }]}>
@@ -56,8 +63,6 @@ const MarksHeaderTable = ({
                     setDataIntoModal(rowTitle)
                     setIsModalVisible(false)
                 }
-                
-                 
             }}
             >
                 <Image style={{width:25,height:25}}  source={Assets.Tagging}/>
@@ -68,8 +73,8 @@ const MarksHeaderTable = ({
                     value={rowTitle}
                     multiline={true}
                     editable={editable}
-                    onChangeText={onChangeText}
-                    keyboardType={keyboardType}
+                    onChangeText={handleTextChange}
+                    keyboardType={'numeric'}
                     maxLength={maxLength}
                     onBlur={onBlur}
                     blurOnSubmit={isBlur}
@@ -78,7 +83,6 @@ const MarksHeaderTable = ({
         </View>
     );
 }
-
 const styles = {
     container: {
         height:60,
@@ -99,5 +103,10 @@ const styles = {
         fontFamily : monospace_FF
     }
 }
-
 export default MarksHeaderTable;
+
+
+
+
+
+
