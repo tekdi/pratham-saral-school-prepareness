@@ -22,7 +22,7 @@ const MarksHeaderTable = ({
     subject,
     onBlur,
     isBlur = false,
-}) => {
+  }) => {
     const [text, setText] = useState(rowTitle);
     const handleTextChange = (newText) => {
      const pattern = /^[0-9]*$/;
@@ -48,7 +48,7 @@ const MarksHeaderTable = ({
                 })
             }
         });
-    }
+    };
     let filterExamquesdata = studentsAndExamData && studentsAndExamData.data.exams.filter((data)=> data.subject === subject)
     return (
         <View style={[styles.container, customRowStyle, { borderColor: rowBorderColor }]}>
@@ -69,15 +69,15 @@ const MarksHeaderTable = ({
                 </TouchableOpacity>
                 :
                 <TextInput
-                style={styles.titleTextStyle}
-                value={text}
-                multiline={true}
-                editable={editable}
-                onChangeText={handleTextChange}
-                keyboardType={'numeric'}
-                maxLength={maxLength}
-                onBlur={onBlur}
-                blurOnSubmit={isBlur}
+                    style={styles.titleTextStyle}
+                    value={texts}
+                    multiline={true}
+                    editable={editable}
+                    onChangeText={handleTextChange}
+                    keyboardType={'numeric'}
+                    maxLength={maxLength}
+                    onBlur={onBlur}
+                    blurOnSubmit={isBlur}
                 />
             }
         </View>
@@ -104,3 +104,9 @@ const styles = {
     }
 }
 export default MarksHeaderTable;
+
+
+
+
+
+
