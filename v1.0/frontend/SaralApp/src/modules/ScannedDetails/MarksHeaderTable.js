@@ -70,7 +70,7 @@ const MarksHeaderTable = ({
                 :
                 <TextInput
                     style={styles.titleTextStyle}
-                    value={texts}
+                    value={rowTitle}
                     multiline={true}
                     editable={editable}
                     onChangeText={handleTextChange}
