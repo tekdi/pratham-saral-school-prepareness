@@ -1,5 +1,4 @@
 import React from 'react';
-import { useState } from 'react';
 import { View, TextInput, Image,TouchableOpacity,Dimensions } from 'react-native';
 import { Assets } from '../../assets';
 import AppTheme from '../../utils/AppTheme';
@@ -23,16 +22,6 @@ const MarksHeaderTable = ({
     onBlur,
     isBlur=false
 }) => {
-        const [text, setText] = useState(rowTitle);
-        const handleTextChange = (newText) => {
-          const pattern = /^[0-9]*$/; 
-          if (pattern.test(newText)) {
-            setText(newText);
-            if (onChangeText) {
-              onChangeText(newText);
-            }
-          } 
-        };
 
     const setDataIntoModal = (value) => {
         let filterExam = studentsAndExamData.data.exams.filter((data)=> data.subject === subject)
@@ -76,11 +65,11 @@ const MarksHeaderTable = ({
                 :
                 <TextInput
                     style={styles.titleTextStyle}
-                    value={text}
+                    value={rowTitle}
                     multiline={true}
                     editable={editable}
-                    onChangeText={handleTextChange}
-                    keyboardType={'numeric'}
+                    onChangeText={onChangeText}
+                    keyboardType={keyboardType}
                     maxLength={maxLength}
                     onBlur={onBlur}
                     blurOnSubmit={isBlur}
