@@ -88,10 +88,9 @@ exports.getSaveScan = async (req, res, next) => {
         if (req.body.userId && !req.body.schoolId) {
             req.body.userId = req.body.userId.toLowerCase()
             const userData = await Users.findOne({ userId: req.body.userId })
+
             match.schoolId = userData.schoolId
         }
-
-
         const { schoolId, classId, section, subject, fromDate, roiId } = req.body
 
         if (schoolId) {
@@ -116,21 +115,16 @@ exports.getSaveScan = async (req, res, next) => {
         if (subject && subject != 'Subject') {
             match.subject = new RegExp(`^${subject}$`, 'i')
         }
-
-        if (req.body.page) {
-            req.body.limit = 10;
-            req.body.page = 1;
-        } else {
-            req.body.limit = 0;
-            req.body.page = 1;
-        }
-
+        
+        req.body.page=req.body.page || 1
+        req.body.limit=req.body.limit || 10
+        const totalRecord=(await Marks.find(match)).length;
+        // Calculate the total number of pages
+        const totalPages = Math.ceil(totalRecord / req.body.limit);
         const savedScan = await Marks.find(match, { _id: 0, __v: 0 })
             .limit(parseInt(req.body.limit) * 1)
             .skip((parseInt(parseInt(req.body.page)) - 1) * parseInt(parseInt(req.body.limit)))
-
-
-        res.status(200).json({ data: savedScan })
+        res.status(200).json({ data: savedScan , total_Records:totalRecord, total_Pages:totalPages})
     } catch (e) {
         res.status(400).json({ "error": true, e })
     }
